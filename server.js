@@ -1,9 +1,19 @@
 const express = require('express')
 const path = require('path')
+var Rollbar = require('rollbar')
+
+var rollbar = new Rollbar({
+  accessToken: 'daeabd0d9cdf44b4831d88469ce66d48',
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+})
+rollbar.log('hello world!')
+
 const app = express()
 require('dotenv').config();
 const {bots, playerRecord} = require('./data')
 const {shuffleArray} = require('./utils')
+
 app.use(express.json());
 
 app.use(express.static("public"));
@@ -14,10 +24,31 @@ app.get('/styles', (req,res)=>{
 
 app.get('/js', (req,res)=>{
     res.sendFile(path.join(__dirname,'./public/index.js'))
+    rollbar.info("HTML file served successfully")
 })
+
+app.post('/api/robots'), (rec, res) => {
+    let {getAllBots} = req.body;
+    getAllBots = getAllBots.trim();
+
+    const index = getAllBots.findIndex((getAllBots) => getAllBots === getAllBots);
+
+    if(index === -1 && getAllBots !== "") {
+        getAllBots.push(getAllBots);
+        rollbar.log('robot added successfully', {author: "Christine", type: "clicked on"});
+        res.status(200).sendD(getAllBots);
+    }else if(getAllBots === "") {
+        rollbar.error('No robot chosen');
+        res.status(400).send('must chose robots');
+    }else {
+        rollbar.error('robot already chosen');
+        res.status(400).send('robot has already been chosen')
+    }
+}
 
 
 app.get('/api/robots', (req, res) => {
+    rollbar.info("Someone got the list of robots on page load")
     try {
         res.status(200).send(botsArr)
     } catch (error) {
